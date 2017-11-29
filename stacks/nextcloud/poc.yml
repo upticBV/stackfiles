@@ -1,0 +1,81 @@
+# uptic B.V. Nextcloud POC Stack
+# version 0.9
+# Author Matthew Frost (matthew@uptic.nl)
+##############################################
+
+version: '3.4'
+
+
+services:
+  pocapp:
+    image: nextcloud
+    volumes:
+      - nextcloud:/var/www/html
+    environment:
+      - MYSQL_HOST=pocdb
+      - MYSQL_DATABASE=nextcloudpoc
+      - MYSQL_USER=nextcloudpoc
+      - MYSQL_PASSWORD=nextcloudpoc
+    restart: always
+    deploy:
+      labels:
+        - "traefik.docker.network=publicnet"
+        - "traefik.frontend.rule=Host:test.cloud.uptic.eu"
+        - "traefik.enable=false"
+        - "traefik.port=80"
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+    networks:
+      publicnet:
+      dbnet:
+
+  pocdb:
+    image: mariadb
+    restart: always
+    volumes:
+      - db:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=nextcloudpoc
+      - MYSQL_PASSWORD=nextcloudpoc
+      - MYSQL_DATABASE=nextcloudpoc
+      - MYSQL_USER=nextcloudpoc
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+    networks:
+      - dbnet
+
+  app_cron:
+    image: nextcloud
+    restart: always
+    volumes:
+      - nextcloud:/var/www/html
+    networks:
+      - dbnet
+    user: www-data
+    entrypoint: |
+      bash -c 'bash -s <<EOF
+        trap "break;exit" SIGHUP SIGINT SIGTERM
+
+        while [ ! -f /var/www/html/config/config.php ]; do
+          sleep 1
+        done
+
+        while true; do
+          php -f /var/www/html/cron.php
+          sleep 15m
+        done
+      EOF'
+
+volumes:
+  nextcloud:
+  db:
+
+networks:
+  dbnet:
+  publicnet:
+    external: true

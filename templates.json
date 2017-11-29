@@ -1,0 +1,21 @@
+[
+  {
+    "type": "stack",
+    "title": "NextcloudPOC",
+    "description": "Nextcloud POC deployment made easy.",
+    "note": "Deploys nextcloud POC.",
+    "categories": ["nextcloud"],
+    "platform": "linux",
+    "logo": "https://nextcloud.com/contribook/main/images/nextcloud/50.png?x16328",
+    "repository": {
+      "url": "https://github.com/upticBV/stackfiles",
+      "stackfile": "stacks/nextcloud/poc.yml"
+    },
+    "env": [
+      {
+        "name": "MYSQL_ROOT_PASSWORD",
+        "label": "Database root password",
+        "description": "Password used by the MySQL root user."
+}]
+}
+]
